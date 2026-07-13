@@ -1,4 +1,5 @@
-> **Prerequisites:** This project builds on [LLM From Scratch](https://github.com/Arjun-Bhattarai/LLMs). Familiarity with GPT architecture and SFT recommended.
+> **Prerequisites:** This project builds on my **[LLMs](https://github.com/Arjun-Bhattarai/LLMs)** repository. Familiarity with Transformer architecture, GPT models, and the fundamentals of LLMs is recommended.
 
-# Reasoning-LLMs
-Train LLMs to reason step-by-step from scratch using PyTorch. 
+# RAG From Scratch
+
+A comprehensive journey through **Retrieval-Augmented Generation (RAG)**, featuring hands-on implementations, in-depth explanations, study notes, experiments, and insights gathered from research papers, official documentation, and practical examples.
