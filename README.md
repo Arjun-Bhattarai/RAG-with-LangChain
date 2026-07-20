@@ -1,94 +1,36 @@
-> **Prerequisites:** This project builds on my **[LLMs](https://github.com/Arjun-Bhattarai/LLMs)** repository. Familiarity with Transformer architecture, GPT models, and the fundamentals of LLMs is recommended.
+> **Prerequisites:** This project builds on my **[LLMs](https://github.com/Arjun-Bhattarai/LLMs)** repository. Familiarity with Transformers, GPT models, and LLM fundamentals is recommended.
 
-# RAG From Scratch: A Practical Learning Journey
+# RAG From Scratch
 
-his repository focuses on learning RAG from first principles through hands-on implementation, experiments, and detailed explanations rather than using high-level abstractions.
+A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first principles using **LangChain**, **ChromaDB**, and **Ollama**. This repository focuses on understanding how modern RAG systems work through practical implementations rather than high-level abstractions.
 
 ---
 
-## Project Overview
+## What I've Implemented
 
-This project implements a full **Retrieval-Augmented Generation (RAG)** pipeline from scratch using LangChain and a local Ollama model.  
-The objective is to generate answers grounded in retrieved documents instead of relying only on model memory.
+### Core RAG Pipeline
+- Basic RAG setup
+- Document loading and preprocessing
+- Document chunking
+- Embedding generation
+- Vector indexing with ChromaDB
+- Semantic retrieval
+- Context-aware answer generation
 
-## What This Project Covers
+### Advanced Retrieval Techniques
+- Multi-Query Retrieval
+- RAG-Fusion (Reciprocal Rank Fusion)
+- Query Decomposition
+  - Sequential Query Decomposition
+  - Parallel Query Decomposition
 
-- Core RAG concepts and practical implementation
-- Document indexing for semantic search
-- Retrieval of relevant chunks from indexed data
-- Prompting with retrieved context
-- Context-aware answer generation with an LLM
-- Updated LangChain-compatible flow without deprecated Hub usage
+### Additional Work
+- Local inference using Ollama (Llama 3)
+- HuggingFace Embeddings (`BAAI/bge-small-en-v1.5`)
+- Modern LangChain implementation (without deprecated APIs)
+- Detailed notebook explanations and experiments
 
-## RAG Pipeline Diagram
-
-### High-Level Flow
-
-```text
-User Question
-    ↓
-Retriever (semantic search on indexed chunks)
-    ↓
-Relevant Context Chunks
-    ↓
-Prompt Template (Context + Question)
-    ↓
-LLM (Ollama / Llama3)
-    ↓
-Final Grounded Answer
-```
-
-### Detailed Component Flow
-
-```text
-Knowledge Source Documents
-    ↓
-Chunking
-    ↓
-Embeddings
-    ↓
-Vector Index
-    ↓
-Retriever
-    ↓
-(Top-K relevant chunks)
-
-User Query ────────────────────────────────┐
-                                            ├──> Prompt Construction
-Retrieved Context ──────────────────────────┘
-                    ↓
-                LLM Inference
-                    ↓
-             Parsed Final Response
-```
-
-## Workflow Stages
-
-1. **Basic Setup**  
-   Establishes the foundational RAG flow and required integrations.
-
-2. **Indexing**  
-   Prepares and stores chunk embeddings for retrieval.
-
-3. **Retrieval**  
-   Selects relevant context chunks for an incoming query.
-
-4. **Generation**  
-   Combines question + context in a prompt and generates the final answer.
-
-## Design Decisions
-
-- **Grounded responses:** Answers are tied to retrieved context.
-- **Deterministic behavior:** Low temperature for consistent outputs.
-- **Local inference:** Uses Ollama-hosted model for local execution.
-- **Modern compatibility:** Uses local `ChatPromptTemplate` approach.
-
-## Expected Output
-
-For each user query, the system:
-- retrieves semantically relevant content,
-- injects it into the prompt,
-- and returns a concise, context-aware answer.
+---
 
 ## Tech Stack
 
@@ -96,25 +38,27 @@ For each user query, the system:
 - LangChain
 - Ollama
 - Llama 3
-- HuggingFace Embeddings (BAAI/bge-small-en-v1.5)
 - ChromaDB
-- tiktoken
+- HuggingFace Embeddings
 - BeautifulSoup4
+- tiktoken
 
-## Current Limitations
+---
 
-- Quality is dependent on retrieval quality and indexed document relevance.
-- If context is missing, answers may be uncertain.
-- Local model speed depends on hardware capability.
+## Current Status
 
-## Future Improvements
+- ✅ Basic RAG
+- ✅ Indexing
+- ✅ Retrieval
+- ✅ Generation
+- ✅ Multi-Query Retrieval
+- ✅ RAG-Fusion
+- ✅ Query Decomposition
 
-- Add reranking for better retrieval precision
-- Add source citation in generated answers
-- Add evaluation for retrieval and answer faithfulness
-- Improve query handling for ambiguous or multi-hop questions
+More advanced RAG techniques will be added as the project progresses.
 
-## Conclusion
+---
 
-This repository demonstrates a practical, modular, and modern RAG implementation path.  
-It is intended as both a learning resource and a solid base for building production-ready retrieval-augmented AI applications.
+## Goal
+
+The goal of this repository is to learn, implement, and document modern Retrieval-Augmented Generation techniques from scratch while building a strong foundation for production-ready RAG systems.
