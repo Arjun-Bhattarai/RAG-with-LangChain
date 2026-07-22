@@ -6,7 +6,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 
 ---
 
-## What I've Implemented
+## What I've Implemented:
 
 ### Core RAG Pipeline
 - Basic RAG setup
