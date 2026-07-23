@@ -8,7 +8,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 
 ## What I've Implemented:
 
-### Core RAG Pipeline
+### Core RAG Pipeline:
 - Basic RAG setup
 - Document loading and preprocessing
 - Document chunking
