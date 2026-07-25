@@ -41,7 +41,7 @@ Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cl
     }
   }
 }
-
+```
 ### Additional Work
 - Local inference using Ollama (Llama 3)
 - HuggingFace Embeddings (`BAAI/bge-small-en-v1.5`)
