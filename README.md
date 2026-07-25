@@ -23,6 +23,24 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 - Query Decomposition
   - Sequential Query Decomposition
   - Parallel Query Decomposition
+ 
+
+## 🤖 MCP Integration
+
+Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cline, VS Code) via
+[GitMCP](https://gitmcp.io/Arjun-Bhattarai/LLMs).
+
+### Configuration
+
+```json
+{
+  "servers": {
+    "LLMs Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/Arjun-Bhattarai/"RAG-with-LangChain"
+    }
+  }
+}
 
 ### Additional Work
 - Local inference using Ollama (Llama 3)
