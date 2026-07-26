@@ -17,7 +17,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 - Semantic retrieval
 - Context-aware answer generation
 
-### Advanced Retrieval Techniques
+### Advanced Retrieval Techniques:
 - Multi-Query Retrieval
 - RAG-Fusion (Reciprocal Rank Fusion)
 - Query Decomposition
