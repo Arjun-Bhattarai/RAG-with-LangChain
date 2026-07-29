@@ -25,7 +25,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
   - Parallel Query Decomposition
  
 
-## 🤖 MCP Integration::
+## 🤖 MCP Integration:
 
 Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cline, VS Code) via
 [GitMCP](https://gitmcp.io/Arjun-Bhattarai/RAG-with-LangChain).
@@ -50,7 +50,7 @@ Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cl
 
 ---
 
-## Tech Stack
+## Tech Stack:
 
 - Python
 - LangChain
