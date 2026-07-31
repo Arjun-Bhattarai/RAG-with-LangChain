@@ -63,7 +63,7 @@ Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cl
 
 ---
 
-## Current Status
+## Current Status:
 
 - ✅ Basic RAG
 - ✅ Indexing
