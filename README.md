@@ -6,9 +6,9 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 
 ---
 
-## What I've Implemented
+## What I've Implemented:
 
-### Core RAG Pipeline
+### Core RAG Pipeline:
 - Basic RAG setup
 - Document loading and preprocessing
 - Document chunking
@@ -17,14 +17,32 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 - Semantic retrieval
 - Context-aware answer generation
 
-### Advanced Retrieval Techniques
+### Advanced Retrieval Techniques:
 - Multi-Query Retrieval
 - RAG-Fusion (Reciprocal Rank Fusion)
 - Query Decomposition
   - Sequential Query Decomposition
   - Parallel Query Decomposition
+ 
 
-### Additional Work
+## 🤖 MCP Integration:
+
+Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cline, VS Code) via
+[GitMCP](https://gitmcp.io/Arjun-Bhattarai/RAG-with-LangChain).
+
+### Configuration
+
+```json
+{
+  "servers": {
+    "LLMs Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/Arjun-Bhattarai/"RAG-with-LangChain"
+    }
+  }
+}
+```
+### Additional Work:
 - Local inference using Ollama (Llama 3)
 - HuggingFace Embeddings (`BAAI/bge-small-en-v1.5`)
 - Modern LangChain implementation (without deprecated APIs)
@@ -32,7 +50,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 
 ---
 
-## Tech Stack
+## Tech Stack:
 
 - Python
 - LangChain
@@ -45,7 +63,7 @@ A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first
 
 ---
 
-## Current Status
+## Current Status:
 
 - ✅ Basic RAG
 - ✅ Indexing
