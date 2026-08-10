@@ -1,6 +1,6 @@
 > **Prerequisites:** This project builds on my **[LLMs](https://github.com/Arjun-Bhattarai/LLMs)** repository. Familiarity with Transformers, GPT models, and LLM fundamentals is recommended.
 
-# RAG From Scratch
+# RAG From Scratch:
 
 A hands-on implementation of **Retrieval-Augmented Generation (RAG)** from first principles using **LangChain**, **ChromaDB**, and **Ollama**. This repository focuses on understanding how modern RAG systems work through practical implementations rather than high-level abstractions.
 
