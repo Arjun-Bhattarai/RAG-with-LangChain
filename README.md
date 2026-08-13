@@ -32,7 +32,7 @@ Accessible to MCP-compatible AI assistants (Cursor, Claude Desktop, Windsurf, Cl
 
 ### Configuration
 
-```json
+```
 {
   "servers": {
     "LLMs Docs": {
