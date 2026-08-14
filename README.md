@@ -109,46 +109,6 @@ Intelligently direct queries to the most relevant data source or retrieval strat
 | **BeautifulSoup4** | Web document loading |
 | **tiktoken** | Token counting and chunking |
 
----
-
-## Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Arjun-Bhattarai/RAG-from-scratch.git
-cd RAG-from-scratch
-```
-
-### 2. Set Up the Environment
-
-```bash
-python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 3. Set Up Ollama
-
-Download and install [Ollama](https://ollama.com), then pull the Llama 3 model:
-
-```bash
-ollama pull llama3
-```
-
-### 4. Run the Notebooks
-
-Open Jupyter and start from notebook 01 in the pipeline/ folder, then progress sequentially:
-
-```bash
-jupyter notebook
-```
 
 > **Tip:** Each notebook is self-contained — you can run any section independently once you have completed the core pipeline (notebooks 01-04).
 
