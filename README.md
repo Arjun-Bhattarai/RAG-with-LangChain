@@ -109,7 +109,7 @@ Intelligently direct queries to the most relevant data source or retrieval strat
 | **BeautifulSoup4** | Web document loading |
 | **tiktoken** | Token counting and chunking |
 
-
+'
 > **Tip:** Each notebook is self-contained — you can run any section independently once you have completed the core pipeline (notebooks 01-04).
 
 ---
