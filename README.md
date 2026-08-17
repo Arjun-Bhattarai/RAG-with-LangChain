@@ -12,7 +12,7 @@ Most RAG tutorials rely on high-level wrappers that hide what is actually happen
 
 ---
 
-## Repository Structure
+## Repository Structure:
 
 ```
 RAG-from-scratch/
