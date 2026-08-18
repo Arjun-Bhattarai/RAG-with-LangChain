@@ -59,7 +59,7 @@ RAG-from-scratch/
 | 03 | `retrieval_rag` | Semantic retrieval, similarity search, and retriever configuration |
 | 04 | `generation_rag` | Context-aware answer generation with Ollama (Llama 3) |
 
-### Query Translation
+### Query Translation:
 
 Techniques to reformulate or expand user queries before retrieval, improving recall and relevance.
 
