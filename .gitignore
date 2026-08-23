@@ -1,2 +1,16 @@
 .ipynb_checkpoints/
 .venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Generated vector/index artifacts
+advanced_indexing/colbert-index/
+chroma/
+chroma_db/
+chroma_langchain_db/
+*.faiss
+*.index
+*.pkl
+*.npy
+*.npz

@@ -1,7 +1,0 @@
-Reranking
-advanced_RAG
-advanced_indexing
-pipeline
-query_structuring
-query_translation
-routing
