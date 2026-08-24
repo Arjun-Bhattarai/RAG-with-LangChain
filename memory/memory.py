@@ -17,6 +17,15 @@ class ConversationMemory:
     def clear(self):
         self.messages = []
 
+    def chat(self, user_message, llm=None):
+        if llm is None:
+            llm = create_llm()
+
+        self.add_message(HumanMessage(content=user_message))
+        response = llm.invoke(self.get_messages())
+        self.add_message(AIMessage(content=response.content))
+        return response.content
+
 
 class SummarizationMemory:
 
@@ -130,6 +139,14 @@ Summary:
         self.summary = ""
         self.recent_messages = []
 
+    def chat(self, user_message):
+        human_message = HumanMessage(content=user_message)
+        self.add_message(human_message)
+        context = self.get_context()
+        response = self.llm.invoke(context)
+        self.add_message(AIMessage(content=response.content))
+        return response.content
+
 
 class VectorMemory:
 
@@ -169,6 +186,28 @@ class VectorMemory:
     def clear(self):
 
         self.vector_store.delete_collection()
+
+    def chat(self, user_message, llm=None, k=3):
+        if llm is None:
+            llm = create_llm()
+
+        memories = self.retrieve_memories(user_message, k=k)
+        memory_context = "\n".join(memory.page_content for memory in memories)
+        prompt = f"""
+Use the provided memories to answer the user's question.
+
+Memories:
+{memory_context}
+
+User question:
+{user_message}
+
+Answer:
+"""
+        response = llm.invoke(prompt)
+        self.store_memory(HumanMessage(content=user_message))
+        self.store_memory(AIMessage(content=response.content))
+        return response.content
 
 
 def create_llm(

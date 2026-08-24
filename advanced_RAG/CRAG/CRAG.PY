@@ -2,7 +2,6 @@
 # Yo code ma document retrieval, grading,
 # corrective retrieval ra final answer generation ko process implement gareko cha.
 
-from langchain_community.vectorstores import Chroma
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser

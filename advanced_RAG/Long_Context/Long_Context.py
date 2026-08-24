@@ -2,6 +2,25 @@
 from langchain_ollama import ChatOllama
 
 
+def create_context_chunks(text, chunk_size=500):
+    """Split a long text into word-based chunks."""
+    words = str(text).split()
+    chunks = []
+    for i in range(0, len(words), chunk_size):
+        chunk = " ".join(words[i : i + chunk_size])
+        chunks.append(chunk)
+    return chunks
+
+
+def select_relevant_context(chunks, keywords):
+    """Keep chunks that contain any of the provided keywords."""
+    selected_chunks = []
+    for chunk in chunks:
+        if any(keyword.lower() in chunk.lower() for keyword in keywords):
+            selected_chunks.append(chunk)
+    return selected_chunks
+
+
 class LongContext:
 
     def __init__(
@@ -34,6 +53,12 @@ class LongContext:
                 )
 
         return "\n\n".join(context_parts)
+
+    def create_context_chunks(self, text, chunk_size=500):
+        return create_context_chunks(text, chunk_size=chunk_size)
+
+    def select_relevant_context(self, chunks, keywords):
+        return select_relevant_context(chunks, keywords)
 
     def compress_context(self, context, query):
         # Large context bata query-relevant information extract garne

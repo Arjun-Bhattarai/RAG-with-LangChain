@@ -9,11 +9,10 @@
 
 > A modular, hands-on implementation of **Retrieval-Augmented Generation (RAG)** systems built from the ground up. From basic vector search to agentic self-reflection, multi-turn memory, and quantitative evaluation.
 
----
-
 
 > **Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
 
+---
 ## 📖 Step-by-Step Concepts Explained
 
 ---
@@ -131,3 +130,6 @@ This repository is ready for AI coding assistants via GitMCP:
 
 ---
 
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
