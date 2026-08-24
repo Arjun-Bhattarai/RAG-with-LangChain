@@ -16,3 +16,4 @@ chroma_langchain_db/
 *.npz
 tree.py
 .vscode/
+pyproject.toml
