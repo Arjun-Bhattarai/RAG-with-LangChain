@@ -11,48 +11,8 @@
 
 ---
 
-## ⚡ Quick Start
 
-### 1. Prerequisites
-Ensure you have [Python 3.10+](https://www.python.org/) and [Ollama](https://ollama.ai/) installed.
-
-```bash
-# Pull local models
-ollama pull llama3:latest
-ollama pull nomic-embed-text
-```
-
-### 2. Setup Environment
-```bash
-# Clone the repository
-git clone https://github.com/Arjun-Bhattarai/RAG-from-scratch.git
-cd RAG-from-scratch
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
----
-
-## 📂 Repository Structure & Modules
-
-| Module | Focus Area | Key Notebooks |
-| :--- | :--- | :--- |
-| **`pipeline/`** | Core RAG Foundations | `01_basic_rag` to `04_generation_rag` |
-| **`query_translation/`** | Query Expansion & Reformulation | `05_multi_query` to `09_HyDE` |
-| **`routing/`** | Intelligent Query Dispatch | `10_logical_routing`, `11_semantic_routing` |
-| **`query_structuring/`** | Metadata Extraction & Filters | `12_query_structuring` |
-| **`advanced_indexing/`** | Hierarchical & Late-Interaction Indexing | `13_multi_rep`, `14_Raptor`, `15_ColBERT` |
-| **`Reranking/`** | Re-ordering & Candidate Scoring | `16_reranking` |
-| **`advanced_RAG/`** | Self-Correction & Agentic Loops | `Self_RAG`, `CRAG`, `Long_Context` |
-| **`memory/`** | Conversational State Retention | `17_conversation`, `18_summarization`, `19_vector` |
-| **`evaluation/`** | Metric Validation & RAG Triad | `RAG_Evaluation` |
-
----
+> **Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
 
 ## 📖 Step-by-Step Concepts Explained
 
