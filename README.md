@@ -131,6 +131,3 @@ This repository is ready for AI coding assistants via GitMCP:
 
 ---
 
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
