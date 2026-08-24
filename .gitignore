@@ -15,3 +15,4 @@ chroma_langchain_db/
 *.npy
 *.npz
 tree.py
+.vscode/
