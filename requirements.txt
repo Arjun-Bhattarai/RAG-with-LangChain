@@ -4,6 +4,7 @@ langchain-core
 langchain-community
 langchain-text-splitters
 langchain-classic
+langchain-chroma
 
 # LangGraph
 langgraph
@@ -47,6 +48,7 @@ youtube-transcript-api
 numpy
 scikit-learn
 scipy
+python-dotenv
 
 # Jupyter
 jupyter

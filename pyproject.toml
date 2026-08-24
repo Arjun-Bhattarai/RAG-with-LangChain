@@ -18,5 +18,6 @@ include = [
     "query_translation*",
     "Reranking*",
     "routing*",
-    "advanced_indexing*"
+    "advanced_indexing*",
+    "memory*"
 ]
