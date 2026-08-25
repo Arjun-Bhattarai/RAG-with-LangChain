@@ -17,3 +17,4 @@ chroma_langchain_db/
 tree.py
 .vscode/
 pyproject.toml
+.env
