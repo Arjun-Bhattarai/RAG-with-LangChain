@@ -43,6 +43,7 @@ requests
 beautifulsoup4
 yt-dlp
 youtube-transcript-api
+tavily-python
 
 # ML & Utilities
 numpy
