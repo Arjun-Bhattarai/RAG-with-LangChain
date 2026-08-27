@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 
 def reciprocal_rank_fusion(results: List[List[Document]], k: int = 60):
     """Rerank multiple retrieval lists using Reciprocal Rank Fusion from RAG-Fusion."""
-    fusion_mod = import_module("query_translation.06_Rag_fusion")
+    fusion_mod = import_module("src.query_translation.rag_fusion")
     return fusion_mod.reciprocal_rank_fusion(results, k=k)
 
 
