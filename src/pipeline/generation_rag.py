@@ -8,7 +8,17 @@ from langchain_ollama import ChatOllama
 
 def format_docs(docs: List[Document]) -> str:
     """Format a list of documents into a single string context."""
-    return "\n\n".join(doc.page_content for doc in docs)
+    if not docs:
+        return ""
+    parts = []
+    for doc in docs:
+        content = getattr(doc, "page_content", None)
+        if content is None:
+            content = str(doc)
+        text = str(content).strip()
+        if text:
+            parts.append(text)
+    return "\n\n".join(parts)
 
 
 RAG_PROMPT_TEMPLATE = """You are an assistant for question-answering tasks.
@@ -61,3 +71,15 @@ def create_generation_chain(
         | StrOutputParser()
     )
     return chain
+
+
+def create_answer_chain(
+    llm: Optional[Any] = None,
+    prompt: Optional[ChatPromptTemplate] = None,
+):
+    """Create a generation chain that answers from already-built context."""
+    if llm is None:
+        llm = ChatOllama(model="llama3:latest", temperature=0)
+    if prompt is None:
+        prompt = DEFAULT_GENERATION_PROMPT
+    return prompt | llm | StrOutputParser()

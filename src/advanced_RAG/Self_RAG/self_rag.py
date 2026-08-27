@@ -1,6 +1,8 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+from src.core.models import EvidenceEvaluation
+
 
 # SELF-RAG KO REUSABLE IMPLEMENTATION
 
@@ -226,21 +228,45 @@ class SelfRAG:
 
         for i, document in enumerate(documents, start=1):
 
-            grade = self.relevance_chain.invoke({
-                "question": question,
-                "document": document.page_content
-            })
-
-            grade = _normalize_yes_no(grade)
+            try:
+                grade = self.relevance_chain.invoke({
+                    "question": question,
+                    "document": getattr(document, "page_content", str(document)),
+                })
+                grade = _normalize_yes_no(grade)
+            except Exception as exc:
+                print(f"Self-RAG grading failed for document {i}: {exc}")
+                continue
 
             print(f"Document {i} relevance: {grade}")
-
-            # Relevant document matra rakheko
 
             if grade == "YES":
                 relevant_documents.append(document)
 
         return relevant_documents
+
+    def evaluate_evidence(self, question, documents):
+        """Evaluate already-retrieved evidence without generating a final answer."""
+        if not documents:
+            return EvidenceEvaluation(
+                sufficient=False,
+                requires_more_retrieval=True,
+                relevant_documents=[],
+                reason="No documents to evaluate.",
+            )
+
+        relevant_documents = self.grade_documents(question, documents)
+        sufficient = len(relevant_documents) > 0
+        return EvidenceEvaluation(
+            sufficient=sufficient,
+            requires_more_retrieval=not sufficient,
+            relevant_documents=relevant_documents,
+            reason=(
+                f"Self-RAG found {len(relevant_documents)} relevant documents."
+                if sufficient
+                else "Self-RAG found no relevant documents."
+            ),
+        )
 
 
     # CONTEXT BUILDING
