@@ -1,4 +1,7 @@
 # 🧠 RAG From Scratch
+## Advanced Modular Retrieval-Augmented **Generation** System
+
+> **Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-0.2%2B-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://www.langchain.com/)
@@ -7,128 +10,255 @@
 [![ColBERT](https://img.shields.io/badge/Late_Interaction-ColBERT-red?style=flat-square)](https://github.com/stanford-futuredata/ColBERT)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-A modular, end-to-end Retrieval-Augmented Generation (RAG) system built from scratch, exploring and integrating modern RAG techniques into a single local pipeline.
+A modular Retrieval-Augmented Generation (RAG) system built from scratch to explore, implement, evaluate, and integrate modern RAG techniques into a single pipeline.
 
-Goes beyond a basic retrieve → generate loop by combining query transformation, intelligent source routing, advanced indexing, multi-source retrieval, deduplication, cross-encoder reranking, freshness scoring, CRAG, Self-RAG, long-context handling, failure handling, and local inference via Ollama.
+The project goes beyond a basic retrieve → generate workflow by combining query processing, source routing, advanced retrieval, deduplication, reranking, freshness scoring, CRAG, Self-RAG, long-context processing, failure handling, and local LLM inference with Ollama.
 
-> **Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
+Goal: Understand and engineer modern RAG systems from the ground up instead of treating RAG as a black box.
+---
 
-Overview
+## ✨ Features
 
-A basic RAG pipeline (Query → Retrieve → Context → LLM → Answer) breaks down when queries are ambiguous, evidence is scattered or outdated, or the context grows too large. This project tackles those problems by implementing each technique as an independent module, then combining the relevant ones into a single integrated pipeline — with a focus on modularity, retrieval quality, evidence evaluation, and reliability.
+* 🔎 **Query Processing** — Multi-Query, RAG Fusion, Query Decomposition, Step-Back Prompting, HyDE
+* 🧭 **Intelligent Routing** — Logical, Semantic, Local, Web, and Hybrid routing
+* 📚 **Advanced Retrieval** — Chroma, RAPTOR, ColBERT, Hybrid Retrieval
+* ♻️ **Deduplication** — Removes duplicate and overlapping evidence
+* 🎯 **Reranking** — Cross-Encoder based relevance reranking
+* 🕐 **Freshness Scoring** — Prioritizes recent information when required
+* 🔄 **CRAG** — Corrective retrieval when evidence is insufficient
+* 🧠 **Self-RAG** — Evaluates retrieved evidence and generated responses
+* 📖 **Long Context** — Handles larger collections of relevant evidence
+* 🛡️ **Failure Handling** — Supports `NOT_ANSWERABLE` when evidence is insufficient
+* 🤖 **Local LLM** — Generation through Ollama
+* 🧪 **Evaluation & Testing** — Architecture, end-to-end, and diagnostic validation
+* 💾 **Memory Experiments** — Conversation, summarization, and vector memory
 
-Key Features
-Query Processing — multi-query generation, decomposition, step-back prompting, HyDE, RAG Fusion, query structuring
-Routing — logical, semantic, and source routing (LOCAL / WEB / HYBRID)
-Retrieval — Chroma vector retrieval, Wikipedia, Tavily web search, hybrid retrieval
-Advanced Indexing — multi-representational indexing, RAPTOR, ColBERT
-Retrieval Quality — deduplication, cross-encoder reranking, freshness scoring
-Advanced RAG — Corrective RAG (CRAG), Self-RAG, long-context processing, evidence evaluation
-Generation — local LLM inference via Ollama
-Testing — architecture tests, end-to-end pipeline tests, diagnostics
-Architecture
-User Query → Multi-Query Processor → Source Router (LOCAL / WEB / HYBRID)
-    → Retrieval (Chroma/RAPTOR, Tavily/Wikipedia) → Deduplication
-    → Cross-Encoder Reranking → Freshness Scoring → Top Evidence
-    → CRAG + Self-RAG Evaluation → Sufficient? → [No: retrieve again]
-    → Context Builder → Long Context (if needed) → Ollama → Final Answer
+---
 
-If evidence is deemed insufficient after evaluation, the system returns NOT_ANSWERABLE instead of overclaiming.
+# 🏗️ Integrated RAG Architecture
 
-Project Structure
-RAG-from-scratch/
-├── data_source/          # Web search & Wikipedia sources
-├── integration/          # Final integrated pipeline (script + notebook)
-├── notebooks/            # Individual technique experiments
-├── src/
-│   ├── pipeline/          # Core RAG stages
-│   ├── query_translation/ # Multi-query, RAG Fusion, decomposition, step-back, HyDE
-│   ├── query_structuring/
-│   ├── routing/           # Logical, semantic, source routing
-│   ├── advanced_indexing/ # Multi-rep indexing, RAPTOR, ColBERT
-│   ├── retrieval/         # Chroma, hybrid, web retrievers
-│   ├── Reranking/          # Cross-encoder + freshness
-│   ├── advanced_RAG/       # CRAG, Self-RAG, long context
-│   ├── evaluation/
-│   ├── memory/             # Conversation, summarization, vector memory
-│   └── utils/               # Deduplication, evidence helpers
-└── tests/                 # Architecture, e2e, diagnostic tests
-Technologies
-Technology	Purpose
-Python	Core language
-LangChain	RAG/LLM orchestration
-ChromaDB	Vector storage & retrieval
-Hugging Face	Embeddings
-Ollama	Local LLM inference
-Tavily / Wikipedia	Web retrieval
-Cross-Encoder	Reranking
-RAPTOR / ColBERT	Advanced indexing
+```text
+                         USER QUERY
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  QUERY PROCESSOR │
+                    │    MULTI-QUERY   │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │   SOURCE ROUTER  │
+                    │ LOCAL / WEB /    │
+                    │ HYBRID           │
+                    └────────┬─────────┘
+                             │
+                ┌────────────┼────────────┐
+                ▼            ▼            ▼
+             LOCAL          WEB         HYBRID
+                │            │            │
+             Chroma       Tavily       Chroma
+             RAPTOR       Wikipedia    Tavily
+                                        Wikipedia
+                └────────────┼────────────┘
+                             ▼
+                    RETRIEVED DOCUMENTS
+                             │
+                             ▼
+                       DEDUPLICATION
+                             │
+                             ▼
+                    CROSS-ENCODER
+                       RERANKING
+                             │
+                             ▼
+                     FRESHNESS SCORE
+                             │
+                             ▼
+                       TOP EVIDENCE
+                             │
+                    ┌────────┴────────┐
+                    ▼                 ▼
+                  CRAG              SELF-RAG
+                    │                 │
+                    └────────┬────────┘
+                             │
+                     EVIDENCE EVALUATION
+                             │
+                  ┌──────────┴──────────┐
+                  │                     │
+              SUFFICIENT           INSUFFICIENT
+                  │                     │
+                  │              ADDITIONAL RETRIEVAL
+                  │                     │
+                  │              RE-EVALUATION
+                  │                     │
+                  └──────────┬──────────┘
+                             ▼
+                     CONTEXT BUILDER
+                             │
+                             ▼
+                       LONG CONTEXT
+                       WHEN NEEDED
+                             │
+                             ▼
+                     OLLAMA LOCAL LLM
+                             │
+                             ▼
+                       FINAL ANSWER
+```
 
-FastAPI is planned for a future API layer and is not yet implemented.
+---
 
-Installation
-bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd RAG-from-scratch
+# 🔬 RAG Techniques
 
-python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+The project follows a progression from fundamental RAG to advanced retrieval and reasoning techniques.
 
-pip install -r requirements.txt
+| Category                | Techniques                                              |
+| ----------------------- | ------------------------------------------------------- |
+| **Fundamentals**        | Basic RAG, Indexing, Retrieval, Generation              |
+| **Query Processing**    | Multi-Query, RAG Fusion, Decomposition, Step-Back, HyDE |
+| **Query Understanding** | Query Structuring                                       |
+| **Routing**             | Logical, Semantic, Source Routing                       |
+| **Indexing**            | Multi-Representational Indexing, RAPTOR, ColBERT        |
+| **Retrieval**           | Chroma, Web, Wikipedia, Hybrid Retrieval                |
+| **Retrieval Quality**   | Deduplication, Cross-Encoder Reranking, Freshness       |
+| **Advanced RAG**        | CRAG, Self-RAG, Long Context                            |
+| **Memory**              | Conversation, Summarization, Vector Memory              |
+| **Evaluation**          | Retrieval Evaluation, Pipeline Testing, Diagnostics     |
 
-Create a .env file:
+---
 
-env
-TAVILY_API_KEY=your_tavily_api_key
+# ⚙️ How It Works
 
-Pull the required local model:
+The integrated system processes a query through several stages:
 
-bash
-ollama pull <MODEL_NAME>
-Running
-bash
-# Integrated pipeline
-python integration/integration.py
+**1. Query Processing**
+The original query is transformed into multiple query representations to improve retrieval coverage.
 
-# Or explore the notebook
-jupyter lab integration/integrated_rag.ipynb
+**2. Source Routing**
+The system determines whether the query should use **LOCAL**, **WEB**, or **HYBRID** retrieval.
 
-Individual technique experiments live under notebooks/ (e.g. 05_multi_query.ipynb, 14_Raptor.ipynb, CRAG.ipynb).
+**3. Retrieval**
+Relevant evidence is collected from local vector stores and/or external sources such as Tavily and Wikipedia.
 
-Testing
-bash
-python tests/test_architecture.py   # architecture validation
-python tests/test_e2e_pipeline.py   # end-to-end pipeline
-python tests/e2e_diagnostic.py      # component diagnostics
+**4. Deduplication**
+Duplicate and overlapping documents are removed.
 
-Latest diagnostic run: all major phases (Multi-Query, LOCAL/WEB/HYBRID Retrieval, Reranking + Freshness, CRAG, Self-RAG, Long Context, Complete Pipeline, Failure Handling) passed.
+**5. Reranking**
+A cross-encoder evaluates candidate documents and improves their relevance ordering.
 
-Example
+**6. Freshness**
+Recent information can receive additional importance for time-sensitive queries.
 
-Query: "What is the latest situation of the floods in Nepal, including the death toll, missing people, worst-affected areas, and main causes?"
+**7. Evidence Evaluation**
+CRAG and Self-RAG evaluate whether the retrieved evidence is useful and sufficient.
 
-The system routed to WEB retrieval, evaluated the gathered evidence via CRAG and Self-RAG, and — because the evidence wasn't sufficient to confidently answer a fast-changing situation — returned NOT_ANSWERABLE rather than guessing. This is the failure-handling principle in action: insufficient evidence → don't overclaim.
+**8. Corrective Retrieval**
+If the evidence is insufficient, additional retrieval can be triggered.
 
-Design Principles
-Modularity — each technique is an independent, swappable component
-Separation of concerns — query processing, routing, retrieval, ranking, evaluation, generation are cleanly split
-Evidence-based generation — the LLM answers from retrieved evidence, not just internal knowledge
-Reliability — CRAG/Self-RAG evaluate evidence before generation; the system can decline to answer
-Local-first — Ollama removes dependence on a hosted LLM API
-Future Improvements
-FastAPI backend + frontend
-Recall@K / Precision@K, MRR/NDCG evaluation
-Latency benchmarking, source credibility scoring
-Additional local embedding models
-Production deployment & observability
-Status
+**9. Context Construction**
+The strongest evidence is assembled into the final context, using long-context processing when necessary.
 
-Core integrated pipeline is implemented and validated: multi-query, LOCAL/WEB/HYBRID retrieval, reranking + freshness, CRAG, Self-RAG, long context, failure handling, and the full end-to-end pipeline all pass diagnostics.
+**10. Generation**
+The final context is passed to a locally running LLM through Ollama.
 
-License
+**11. Failure Handling**
+If reliable evidence cannot be established, the system can return `NOT_ANSWERABLE` instead of producing an unsupported answer.
 
-No license currently specified.
+---
 
-Author
+# 🧪 Validation
 
-Arjun Bhattarai — GitHub: Arjun-Bhattarai
+The integrated pipeline has been successfully validated across its major components.
+
+| Component         | Status |
+| ----------------- | :----: |
+| Multi-Query       |    ✅   |
+| Local Retrieval   |    ✅   |
+| Web Retrieval     |    ✅   |
+| Hybrid Retrieval  |    ✅   |
+| Reranking         |    ✅   |
+| Freshness Scoring |    ✅   |
+| CRAG              |    ✅   |
+| Self-RAG          |    ✅   |
+| Long Context      |    ✅   |
+| Complete Pipeline |    ✅   |
+| Failure Handling  |    ✅   |
+
+The repository includes architecture tests, end-to-end tests, and diagnostic validation.
+
+---
+# 🧰 Technology Stack
+
+| Technology        | Purpose                         |
+| ----------------- | ------------------------------- |
+| **Python**        | Core implementation             |
+| **LangChain**     | RAG and LLM orchestration       |
+| **ChromaDB**      | Vector storage and retrieval    |
+| **Hugging Face**  | Embeddings and model components |
+| **Ollama**        | Local LLM inference             |
+| **Tavily**        | Web search                      |
+| **Wikipedia**     | External knowledge retrieval    |
+| **Cross-Encoder** | Document reranking              |
+| **RAPTOR**        | Hierarchical retrieval          |
+| **ColBERT**       | Fine-grained retrieval          |
+
+---
+
+# 🤝 Model Context Protocol (MCP)
+
+This repository is ready for AI coding assistants through **GitMCP**.
+
+Add the following MCP server configuration:
+
+```json
+{
+  "servers": {
+    "RAG-from-scratch Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/Arjun-Bhattarai/RAG-from-scratch"
+    }
+  }
+}
+```
+
+This allows compatible AI coding assistants to access the repository as a contextual knowledge source.
+
+---
+
+# 🎯 Project Philosophy
+
+This project is primarily a **learning and engineering project** focused on understanding modern RAG architectures.
+
+The progression is:
+
+**RAG Fundamentals → Query Processing → Routing → Advanced Indexing → Retrieval → Reranking → Evidence Evaluation → CRAG / Self-RAG → Long Context → Evaluation → Integration**
+
+The central idea is:
+
+> **Better Query Understanding + Better Retrieval + Better Ranking + Better Evidence Evaluation + Better Context Management = More Reliable RAG**
+
+
+# 📌 Project Status
+
+**Status: Completed Core Integration ✅**
+
+The major components of the integrated RAG pipeline have been implemented and validated, including:
+
+**Query Processing · Routing · Local/Web/Hybrid Retrieval · Advanced Indexing · Deduplication · Reranking · Freshness · CRAG · Self-RAG · Long Context · Failure Handling · Ollama Generation · End-to-End Testing**
+
+The project is now ready for further application-layer development and experimentation.
+
+---
+
+# 👨‍💻 Author
+
+**Arjun Bhattarai**
+
+
+---
+
+## Built to Understand RAG from the Ground Up
+
+**From basic retrieval to an adaptive, evidence-aware, locally powered RAG system.**
