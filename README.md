@@ -1,14 +1,15 @@
 # 🧠 RAG From Scratch
 ## Advanced Modular Retrieval-Augmented **Generation** System
 
-> **Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
-
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-0.2%2B-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://www.langchain.com/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-FC521F?style=flat-square)](https://www.trychroma.com/)
 [![Ollama](https://img.shields.io/badge/Inference-Ollama_(Llama_3)-000000?style=flat-square&logo=ollama&logoColor=white)](https://ollama.ai/)
 [![ColBERT](https://img.shields.io/badge/Late_Interaction-ColBERT-red?style=flat-square)](https://github.com/stanford-futuredata/ColBERT)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
+>**Prerequisites & Foundation:** This project builds upon foundational language modeling principles covered in **[LLMs from Scratch](https://github.com/Arjun-Bhattarai/LLMs)** (covering Transformer internals, attention mechanisms, and GPT architectures).
+
 
 A modular Retrieval-Augmented Generation (RAG) system built from scratch to explore, implement, evaluate, and integrate modern RAG techniques into a single pipeline.
 
