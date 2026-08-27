@@ -37,22 +37,30 @@ class WikipediaSource:
             "limit": self.top_k,
         }
 
-        response = requests.get(
-            url,
-            params=params,
-            headers=self.headers,
-            timeout=15,
-        )
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self.headers,
+                timeout=15,
+            )
+        except requests.RequestException as exc:
+            print(f"Wikipedia search failed: {exc}")
+            return []
 
         if not response.ok:
-            raise requests.HTTPError(
+            print(
                 f"Wikipedia search failed "
                 f"({response.status_code}): "
-                f"{response.text[:300]}",
-                response=response,
+                f"{response.text[:300]}"
             )
+            return []
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError as exc:
+            print(f"Wikipedia search returned invalid JSON: {exc}")
+            return []
 
         pages = data.get("pages", [])
 
