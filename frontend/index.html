@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced RAG</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1> Arjunix </h1>
+        <p class="subtitle">Ask a question from your knowledge base</p>
+
+        <div id="answer" class="answer">
+            <span>Answer will appear here...</span>
+        </div>
+
+        <div class="input-container">
+            <input
+                type="text"
+                id="question"
+                placeholder="Enter your question..."
+                autocomplete="off"
+            />
+
+            <button onclick="askQuestion()">
+                Ask
+            </button>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            Thinking...
+        </div>
+
+    </div>
+
+    <script src="/static/script.js"></script>
+
+</body>
+</html>
