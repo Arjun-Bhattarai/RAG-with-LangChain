@@ -1,45 +1,3 @@
-"""
-Modular RAG pipeline.
-
-Flow:
-
-User Query
-    ↓
-Ollama Answerability Check
-    ├── ANSWERABLE
-    │       ↓
-    │   Ollama Direct Answer
-    │
-    └── NOT_ANSWERABLE
-            ↓
-        Query Processing
-            ↓
-        LOCAL ChromaDB Retrieval
-            ↓
-        Reranking
-            ↓
-        CRAG / Self-RAG
-            ↓
-        Evidence sufficient?
-            ├── YES → Generation
-            │
-            └── NO
-                  ↓
-              Web Retrieval
-              ├── Tavily
-              └── Wikipedia
-                  ↓
-              Reranking
-                  ↓
-              RAPTOR
-                  ↓
-              CRAG / Self-RAG
-                  ↓
-              Long Context
-                  ↓
-              Ollama Generation
-"""
-
 from __future__ import annotations
 
 import sys
@@ -47,7 +5,14 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
+
+# 
+# PROJECT ROOT
+# 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -57,9 +22,9 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env")
 
 
-# ---------------------------------------------------------
-# LangChain
-# ---------------------------------------------------------
+# 
+# LANGCHAIN
+# 
 
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage
@@ -69,9 +34,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 
-# ---------------------------------------------------------
-# Project imports
-# ---------------------------------------------------------
+# 
+# PROJECT IMPORTS
+# 
 
 from src.advanced_indexing.raptor import RaptorIndexer
 
@@ -119,18 +84,52 @@ from src.utils.deduplication import remove_duplicates
 from src.utils.evidence import select_evidence
 
 
+# 
+# PERSONAL QUERY GENERATION PROMPT
+# (module-level so it isn't rebuilt on every call)
+# 
+
+PERSONAL_PROMPT = ChatPromptTemplate.from_template(
+    """
+You are Arjunx, the personal AI assistant for
+Arjun Bhattarai.
+
+Your task is to answer questions about Arjun Bhattarai
+and Arjunx using the provided website evidence.
+
+IMPORTANT RULES:
+
+1. Use the website evidence as the primary source.
+2. Do not invent information.
+3. Do not guess.
+4. Do not use unsupported facts about Arjun.
+5. If the requested information is not available in the
+   website evidence, clearly say so.
+6. Answer naturally and concisely.
+7. If the user asks who developed, created, built, or made
+   Arjunx, identify Arjun Bhattarai as the developer ONLY
+   when supported by the website evidence.
+8. For Arjunx developer/creator questions, clearly state
+   that Arjun Bhattarai is the developer/creator of Arjunx
+   when supported by the evidence.
+9. Always provide Arjun's personal website link at the
+   end of the response.
+
+Personal Website:
+https://arjunbhattarai8.com.np
+
+Website Evidence:
+{context}
+
+Question:
+{question}
+
+Answer:
+"""
+)
+
+
 class RAGPipeline:
-    """
-    Complete RAG pipeline.
-
-    Priority:
-
-    1. Ask Ollama if it already knows the answer.
-    2. If not, search local ChromaDB.
-    3. If local evidence is insufficient, use web retrieval.
-    4. Apply reranking / RAPTOR / CRAG / Self-RAG / long context.
-    5. Generate final answer with Ollama.
-    """
 
     def __init__(
         self,
@@ -140,18 +139,20 @@ class RAGPipeline:
         **overrides: Any,
     ):
 
-       
-        # CONFIG
-       
+        # CONFIGURATION
 
         self.config = replace(
             config or RAGConfig.from_env(),
             **overrides,
         )
 
-       
+        # ARJUNX PERSONAL WEBSITE
+
+        self.personal_website_url = (
+            "https://arjunbhattarai8.com.np"
+        )
+
         # OLLAMA
-       
 
         self.llm = llm or ChatOllama(
             model=self.config.ollama_model,
@@ -164,9 +165,7 @@ class RAGPipeline:
             base_url=self.config.ollama_base_url,
         )
 
-       
         # ANSWERABILITY CHECK
-       
 
         self.answerability_prompt = ChatPromptTemplate.from_template(
             """
@@ -199,9 +198,7 @@ Decision:
             | StrOutputParser()
         )
 
-       
         # QUERY PROCESSING
-       
 
         self.query_processor = QueryProcessor(
             llm=self.llm,
@@ -209,50 +206,34 @@ Decision:
             enable_multi_query=self.config.enable_multi_query,
         )
 
-       
         # ROUTER
-       
 
         self.router = SourceRouter(
             llm=self.llm
         )
 
-       
         # LOCAL RETRIEVAL
-       
 
         self.vectorstore = None
 
         self.chroma = ChromaRetriever()
 
-        # -----------------------------------------------------
-        # IMPORTANT:
-        # Load your existing ChromaDB here if your
-        # ChromaRetriever supports persistent loading.
-        #
-        # Otherwise build_index() must be called before
-        # querying.
-        # -----------------------------------------------------
-
         try:
             self._load_existing_chroma()
+
         except Exception as exc:
             print(
                 f"Warning: existing ChromaDB could not be loaded: {exc}"
             )
 
-       
         # WEB RETRIEVAL
-       
 
         self.web = WebRetriever(
             wikipedia_top_k=self.config.wikipedia_top_k,
             web_top_k=self.config.web_top_k,
         )
 
-       
         # RAPTOR
-       
 
         self.raptor_indexer = None
 
@@ -270,9 +251,7 @@ Decision:
 
             self.raptor.indexer = self.raptor_indexer
 
-       
         # HYBRID RETRIEVER
-       
 
         self.hybrid = HybridRetriever(
             local=self.chroma,
@@ -281,32 +260,24 @@ Decision:
             use_raptor=self.config.enable_raptor,
         )
 
-       
         # RERANKER
-       
 
         self.reranker = CrossEncoderReranker(
             top_k=self.config.rerank_top_k
         )
 
-       
         # CRAG
-       
 
         self.crag = CRAGEvaluator(
             llm=self.llm,
             min_relevant=self.config.min_evidence_docs,
         )
 
-       
         # SELF-RAG
-       
 
         self.self_rag = None
 
-       
         # LONG CONTEXT
-       
 
         self.long_context = (
             LongContext(
@@ -316,24 +287,18 @@ Decision:
             else None
         )
 
-       
         # GENERATION
-       
 
         self.generation_chain = create_answer_chain(
             llm=self.llm,
             prompt=DEFAULT_GENERATION_PROMPT,
         )
 
-       
         # MEMORY
-       
 
         self.conversation_memory = ConversationMemory()
 
-       
         # EVALUATION
-       
 
         self.evaluator = None
 
@@ -344,29 +309,21 @@ Decision:
                 temperature=self.config.temperature,
             )
 
+    # 
     # CHROMA INITIALIZATION
+    # 
 
     def _load_existing_chroma(self) -> None:
-        """
-        Load an existing persistent ChromaDB collection.
 
-        IMPORTANT:
-        The exact implementation depends on how your
-        ChromaRetriever is written.
+        if getattr(
+            self.chroma,
+            "retriever",
+            None,
+        ) is not None:
 
-        If ChromaRetriever already loads the persistent
-        collection in its constructor, nothing else is required.
-
-        If it requires a retriever, this method should be
-        connected to that implementation.
-        """
-
-        # If your ChromaRetriever already initializes itself,
-        # this will simply use that retriever.
-
-        if getattr(self.chroma, "retriever", None) is not None:
-
-            print("Local ChromaDB retriever loaded.")
+            print(
+                "Local ChromaDB retriever loaded."
+            )
 
         else:
 
@@ -374,7 +331,9 @@ Decision:
                 "Local ChromaDB retriever is currently empty."
             )
 
+    # 
     # BUILD INDEX
+    # 
 
     def build_index(
         self,
@@ -382,6 +341,7 @@ Decision:
     ):
 
         if not documents:
+
             raise ValueError(
                 "Cannot build index from empty documents."
             )
@@ -403,9 +363,7 @@ Decision:
             retriever
         )
 
-        # -----------------------------------------------------
-        # RAPTOR
-        # -----------------------------------------------------
+        # RAPTOR INDEX
 
         if self.config.enable_raptor:
 
@@ -417,7 +375,9 @@ Decision:
                     n_clusters=self.config.raptor_clusters,
                 )
 
-                self.raptor.indexer = self.raptor_indexer
+                self.raptor.indexer = (
+                    self.raptor_indexer
+                )
 
             try:
 
@@ -433,7 +393,423 @@ Decision:
 
         return self.vectorstore
 
+    # 
+    # PERSONAL QUERY DETECTION
+    # 
+
+    def is_personal_query(
+        self,
+        query: str,
+    ) -> bool:
+        """
+        Detect questions about Arjun Bhattarai or Arjunx.
+
+        Personal and Arjunx-related queries are always routed
+        to Arjun Bhattarai's personal website.
+        """
+
+        query_lower = query.lower().strip()
+
+        personal_keywords = [
+
+            # ARJUN BHATTARAI — NAME / IDENTITY
+
+            "arjun bhattarai",
+            "who is arjun",
+            "who's arjun",
+            "who is arjun bhattarai",
+            "about arjun",
+            "tell me about arjun",
+            "tell me about arjun bhattarai",
+
+            # PROFILE
+
+            "arjun profile",
+            "arjun's profile",
+            "arjun portfolio",
+            "arjun's portfolio",
+            "arjun's bio",
+            "arjun bio",
+
+            # SKILLS
+
+            "arjun skills",
+            "arjun's skills",
+            "what skills does arjun have",
+            "what are arjun's skills",
+            "technologies arjun knows",
+            "tech stack of arjun",
+
+            # PROJECTS
+
+            "arjun projects",
+            "arjun's projects",
+            "what projects has arjun built",
+            "projects built by arjun",
+            "projects created by arjun",
+            "what has arjun built",
+
+            # EDUCATION
+
+            "arjun education",
+            "arjun's education",
+            "where did arjun study",
+            "what did arjun study",
+
+            # EXPERIENCE
+
+            "arjun experience",
+            "arjun's experience",
+            "arjun work experience",
+            "arjun's work experience",
+
+            # WORK
+
+            "what does arjun do",
+            "what does arjun work on",
+            "what is arjun working on",
+            "what is arjun currently working on",
+
+            # DEVELOPER / ENGINEER
+
+            "arjun developer",
+            "arjun programmer",
+            "arjun engineer",
+            "arjun software developer",
+            "arjun full stack developer",
+
+            # WEBSITE / PORTFOLIO
+
+            "arjun website",
+            "arjun's website",
+            "arjun portfolio website",
+            "arjun personal website",
+            "arjun website link",
+            "arjun portfolio link",
+
+            # ARJUNX — DEVELOPER / CREATOR
+
+            "who is the developer of arjunx",
+            "who developed arjunx",
+            "who is arjunx developer",
+            "who developed arjunx ai",
+            "who created arjunx",
+            "who built arjunx",
+            "who made arjunx",
+            "who is the creator of arjunx",
+            "who is the creator behind arjunx",
+            "who is behind arjunx",
+            "developer of arjunx",
+            "creator of arjunx",
+            "arjunx developer",
+            "arjunx creator",
+            "arjunx creator name",
+            "arjunx built by",
+            "arjunx created by",
+            "arjunx developed by",
+            "who made this arjunx",
+            "who built this arjunx",
+            "who created this arjunx",
+
+        ]
+
+        return any(
+            keyword in query_lower
+            for keyword in personal_keywords
+        )
+
+    # 
+    # PERSONAL WEBSITE RETRIEVAL
+    # 
+
+    def retrieve_personal_website(
+        self,
+    ) -> List[Document]:
+        """
+        Retrieve readable content from Arjun's personal website.
+        """
+
+        print(
+            "\nRetrieving Arjun Bhattarai's website..."
+        )
+
+        print(
+            f"URL: {self.personal_website_url}"
+        )
+
+        try:
+
+            response = requests.get(
+                self.personal_website_url,
+                timeout=10,
+                headers={
+                    "User-Agent": "Arjunx-RAG/1.0"
+                },
+            )
+
+            response.raise_for_status()
+
+            soup = BeautifulSoup(
+                response.text,
+                "html.parser",
+            )
+
+            # Remove non-content elements.
+
+            for element in soup(
+                [
+                    "script",
+                    "style",
+                    "noscript",
+                    "svg",
+                    "nav",
+                    "footer",
+                ]
+            ):
+
+                element.decompose()
+
+            text = soup.get_text(
+                separator="\n",
+                strip=True,
+            )
+
+            if not text:
+
+                print(
+                    "Personal website returned no readable content."
+                )
+
+                return []
+
+            document = Document(
+                page_content=text,
+                metadata={
+                    "source": "personal_website",
+                    "title": (
+                        "Arjun Bhattarai - Personal Website"
+                    ),
+                    "url": self.personal_website_url,
+                },
+            )
+
+            print(
+                "Personal website retrieved successfully."
+            )
+
+            print(
+                f"Website content length: {len(text)} characters"
+            )
+
+            return [document]
+
+        except Exception as exc:
+
+            print(
+                f"Personal website retrieval failed: {exc}"
+            )
+
+            return []
+
+    # 
+    # PERSONAL QUERY ANSWER
+    # 
+
+    def answer_personal_query(
+        self,
+        query: str,
+    ) -> Dict[str, Any]:
+        """
+        Answer questions about Arjun Bhattarai using
+        information from his personal website.
+        """
+
+        documents = (
+            self.retrieve_personal_website()
+        )
+
+        # WEBSITE FAILED
+
+        if not documents:
+
+            answer = (
+                "I couldn't retrieve Arjun Bhattarai's "
+                "personal website at the moment."
+            )
+
+            self.store_memory(
+                query,
+                answer,
+            )
+
+            return {
+
+                "query": query,
+
+                "route": "PERSONAL_WEBSITE",
+
+                "decision": "PERSONAL",
+
+                "mode": "personal_website",
+
+                "queries": [query],
+
+                "answer": answer,
+
+                "website": self.personal_website_url,
+
+                "website_url": self.personal_website_url,
+
+                "context": "",
+
+                "retrieved_documents": [],
+
+                "reranked_documents": [],
+
+                "evidence": [],
+
+                "evidence_evaluation": {},
+
+                "long_context_used": False,
+
+                "raptor_used": False,
+
+                "evaluation": {},
+            }
+
+        # RERANK WEBSITE CONTENT
+
+        try:
+
+            ranked = self.reranker.rerank_documents(
+                query=query,
+                documents=documents,
+            )
+
+        except Exception as exc:
+
+            print(
+                f"Personal website reranking failed: {exc}"
+            )
+
+            ranked = documents
+
+        # SELECT EVIDENCE
+
+        evidence = select_evidence(
+            ranked,
+            top_k=self.config.final_top_k,
+        )
+
+        # BUILD CONTEXT
+
+        context, long_context_used = (
+            self.build_context(
+                query,
+                evidence,
+            )
+        )
+
+        # PERSONAL GENERATION
+
+        personal_chain = (
+            PERSONAL_PROMPT
+            | self.llm
+            | StrOutputParser()
+        )
+
+        # GENERATE
+
+        try:
+
+            answer = personal_chain.invoke(
+                {
+                    "context": context,
+                    "question": query,
+                }
+            )
+
+        except Exception as exc:
+
+            print(
+                f"Personal answer generation failed: {exc}"
+            )
+
+            answer = (
+                "I couldn't generate an answer from "
+                "Arjun's personal website."
+            )
+
+        # ADD WEBSITE LINK TO ANSWER
+
+        answer = (
+            f"{answer}\n\n"
+            f"🌐 Arjun's Website: "
+            f"{self.personal_website_url}"
+        )
+
+        # MEMORY
+
+        self.store_memory(
+            query,
+            answer,
+        )
+
+        # RETURN
+
+        return {
+
+            "query": query,
+
+            "route": "PERSONAL_WEBSITE",
+
+            "decision": "PERSONAL",
+
+            "mode": "personal_website",
+
+            "queries": [query],
+
+            "answer": answer,
+
+            # Explicit website fields
+            "website": self.personal_website_url,
+
+            "website_url": self.personal_website_url,
+
+            "context": context,
+
+            "retrieved_documents": documents,
+
+            "reranked_documents": ranked,
+
+            "evidence": evidence,
+
+            "evidence_evaluation": {
+
+                "sufficient": bool(evidence),
+
+                "requires_more_retrieval": (
+                    not bool(evidence)
+                ),
+
+                "reason": (
+                    "Answer generated from Arjun Bhattarai's "
+                    "personal website."
+                ),
+            },
+
+            "long_context_used": (
+                long_context_used
+            ),
+
+            "raptor_used": False,
+
+            "evaluation": {},
+        }
+
+    # 
     # ANSWERABILITY
+    # 
 
     def check_answerability(
         self,
@@ -471,7 +847,9 @@ Decision:
 
         return "NOT_ANSWERABLE"
 
+    # 
     # CURRENT QUERY DETECTION
+    # 
 
     def is_current_query(
         self,
@@ -496,7 +874,9 @@ Decision:
             for keyword in keywords
         )
 
+    # 
     # RETRIEVAL
+    # 
 
     def retrieve(
         self,
@@ -542,7 +922,9 @@ Decision:
 
         return documents
 
+    # 
     # WEB FALLBACK
+    # 
 
     def retrieve_web_fallback(
         self,
@@ -575,7 +957,9 @@ Decision:
 
         return documents
 
-    # RETRY
+    # 
+    # RETRY RETRIEVAL
+    # 
 
     def _retry_retrieval(
         self,
@@ -608,7 +992,9 @@ Decision:
             HYBRID,
         )
 
+    # 
     # EVIDENCE EVALUATION
+    # 
 
     def evaluate_evidence(
         self,
@@ -632,9 +1018,7 @@ Decision:
             reason="Evidence accepted without LLM grading.",
         )
 
-        # -----------------------------------------------------
         # CRAG
-        # -----------------------------------------------------
 
         if self.config.enable_crag:
 
@@ -651,9 +1035,7 @@ Decision:
                     f"CRAG evaluation failed: {exc}"
                 )
 
-        # -----------------------------------------------------
         # SELF-RAG
-        # -----------------------------------------------------
 
         if self.config.enable_self_rag:
 
@@ -716,7 +1098,9 @@ Decision:
 
         return evaluation
 
+    # 
     # CONTEXT
+    # 
 
     def build_context(
         self,
@@ -760,7 +1144,9 @@ Decision:
             used_long_context,
         )
 
+    # 
     # GENERATION
+    # 
 
     def generate(
         self,
@@ -795,7 +1181,9 @@ Decision:
                 "because the language model failed."
             )
 
+    # 
     # MEMORY
+    # 
 
     def store_memory(
         self,
@@ -815,7 +1203,9 @@ Decision:
             )
         )
 
+    # 
     # RESPONSE EVALUATION
+    # 
 
     def evaluate_response(
         self,
@@ -859,7 +1249,9 @@ Decision:
 
             return {}
 
+    # 
     # MAIN PIPELINE
+    # 
 
     def run(
         self,
@@ -876,9 +1268,31 @@ Decision:
 
         query = query.strip()
 
-       
+        # STEP 0 — PERSONAL QUERY
+
+        print(
+            "\nChecking whether this is a personal query..."
+        )
+
+        if self.is_personal_query(query):
+
+            print(
+                "Personal query detected."
+            )
+
+            print(
+                "Using Arjun Bhattarai's personal website."
+            )
+
+            return self.answer_personal_query(
+                query
+            )
+
+        print(
+            "Not a personal query."
+        )
+
         # STEP 1 — OLLAMA ANSWERABILITY
-       
 
         print(
             "\nChecking Ollama answerability..."
@@ -939,6 +1353,10 @@ Decision:
 
                 "answer": answer,
 
+                "website": self.personal_website_url,
+
+                "website_url": self.personal_website_url,
+
                 "context": "",
 
                 "retrieved_documents": [],
@@ -986,11 +1404,7 @@ Decision:
 
             selected_route = LOCAL
 
-        # FORCE LOCAL FIRST.
-        #
-        # Even if the router says WEB, we don't go to the web
-        # before checking local knowledge.
-        # 
+        # Force local retrieval first.
 
         local_documents = self.retrieve(
             queries,
@@ -1061,6 +1475,8 @@ Decision:
 
         # STEP 8 — WEB FALLBACK
 
+        used_web = False
+
         if evaluation.requires_more_retrieval:
 
             print(
@@ -1087,15 +1503,18 @@ Decision:
                 f"{len(web_documents)}"
             )
 
-             
-            # Combine local + web evidence
+            if web_documents:
+
+                used_web = True
+
+            # COMBINE LOCAL + WEB
 
             documents = remove_duplicates(
                 local_documents
                 + web_documents
             )
 
-            # Rerank combined results
+            # RERANK COMBINED RESULTS
 
             try:
 
@@ -1178,27 +1597,34 @@ Decision:
                 context,
             )
 
-        
-        # RETURN
-        
+        # STEP 14 — RETURN RESULT
 
         return {
 
             "query": query,
 
-            "route": "LOCAL"
-            if not evaluation.requires_more_retrieval
-            else "HYBRID",
+            "route": (
+                "HYBRID"
+                if used_web
+                else "LOCAL"
+            ),
 
             "decision": answerability,
 
-            "mode": "local_rag"
-            if not evaluation.requires_more_retrieval
-            else "web_fallback_rag",
+            "mode": (
+                "web_fallback_rag"
+                if used_web
+                else "local_rag"
+            ),
 
             "queries": queries,
 
             "answer": answer,
+
+            # Always expose your website to the API/frontend.
+            "website": self.personal_website_url,
+
+            "website_url": self.personal_website_url,
 
             "context": context,
 
@@ -1217,11 +1643,15 @@ Decision:
 
             "raptor_used": (
                 self.raptor.is_ready()
-                and not evaluation.requires_more_retrieval
+                and not used_web
             ),
 
             "evaluation": metrics,
         }
 
+
+# 
+# COMPATIBILITY ALIAS
+# 
 
 RAGIntegration = RAGPipeline
