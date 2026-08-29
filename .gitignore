@@ -18,3 +18,4 @@ tree.py
 .vscode/
 pyproject.toml
 .env
+.pytest_cache/
