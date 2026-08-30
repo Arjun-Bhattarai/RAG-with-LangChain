@@ -9,10 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
-
-# 
 # PROJECT ROOT
-# 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -22,9 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env")
 
 
-# 
 # LANGCHAIN
-# 
 
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage
@@ -34,9 +29,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 
-# 
 # PROJECT IMPORTS
-# 
 
 from src.advanced_indexing.raptor import RaptorIndexer
 
@@ -84,10 +77,7 @@ from src.utils.deduplication import remove_duplicates
 from src.utils.evidence import select_evidence
 
 
-# 
-# PERSONAL QUERY GENERATION PROMPT
-# (module-level so it isn't rebuilt on every call)
-# 
+# PERSONAL QUERY PROMPT
 
 PERSONAL_PROMPT = ChatPromptTemplate.from_template(
     """
@@ -129,6 +119,8 @@ Answer:
 )
 
 
+# RAG PIPELINE
+
 class RAGPipeline:
 
     def __init__(
@@ -146,7 +138,7 @@ class RAGPipeline:
             **overrides,
         )
 
-        # ARJUNX PERSONAL WEBSITE
+        # PERSONAL WEBSITE
 
         self.personal_website_url = (
             "https://arjunbhattarai8.com.np"
@@ -219,9 +211,11 @@ Decision:
         self.chroma = ChromaRetriever()
 
         try:
+
             self._load_existing_chroma()
 
         except Exception as exc:
+
             print(
                 f"Warning: existing ChromaDB could not be loaded: {exc}"
             )
@@ -294,7 +288,7 @@ Decision:
             prompt=DEFAULT_GENERATION_PROMPT,
         )
 
-        # MEMORY
+        # CONVERSATION MEMORY
 
         self.conversation_memory = ConversationMemory()
 
@@ -309,9 +303,9 @@ Decision:
                 temperature=self.config.temperature,
             )
 
-    # 
+    # ========================================================
     # CHROMA INITIALIZATION
-    # 
+    # ========================================================
 
     def _load_existing_chroma(self) -> None:
 
@@ -331,9 +325,9 @@ Decision:
                 "Local ChromaDB retriever is currently empty."
             )
 
-    # 
+    # ========================================================
     # BUILD INDEX
-    # 
+    # ========================================================
 
     def build_index(
         self,
@@ -393,26 +387,20 @@ Decision:
 
         return self.vectorstore
 
-    # 
+    # ========================================================
     # PERSONAL QUERY DETECTION
-    # 
+    # ========================================================
 
     def is_personal_query(
         self,
         query: str,
     ) -> bool:
-        """
-        Detect questions about Arjun Bhattarai or Arjunx.
-
-        Personal and Arjunx-related queries are always routed
-        to Arjun Bhattarai's personal website.
-        """
 
         query_lower = query.lower().strip()
 
         personal_keywords = [
 
-            # ARJUN BHATTARAI — NAME / IDENTITY
+            # ARJUN
 
             "arjun bhattarai",
             "who is arjun",
@@ -470,7 +458,7 @@ Decision:
             "what is arjun working on",
             "what is arjun currently working on",
 
-            # DEVELOPER / ENGINEER
+            # DEVELOPER
 
             "arjun developer",
             "arjun programmer",
@@ -478,7 +466,7 @@ Decision:
             "arjun software developer",
             "arjun full stack developer",
 
-            # WEBSITE / PORTFOLIO
+            # WEBSITE
 
             "arjun website",
             "arjun's website",
@@ -487,7 +475,7 @@ Decision:
             "arjun website link",
             "arjun portfolio link",
 
-            # ARJUNX — DEVELOPER / CREATOR
+            # ARJUNX
 
             "who is the developer of arjunx",
             "who developed arjunx",
@@ -510,7 +498,6 @@ Decision:
             "who made this arjunx",
             "who built this arjunx",
             "who created this arjunx",
-
         ]
 
         return any(
@@ -518,16 +505,13 @@ Decision:
             for keyword in personal_keywords
         )
 
-    # 
+    # ========================================================
     # PERSONAL WEBSITE RETRIEVAL
-    # 
+    # ========================================================
 
     def retrieve_personal_website(
         self,
     ) -> List[Document]:
-        """
-        Retrieve readable content from Arjun's personal website.
-        """
 
         print(
             "\nRetrieving Arjun Bhattarai's website..."
@@ -553,8 +537,6 @@ Decision:
                 response.text,
                 "html.parser",
             )
-
-            # Remove non-content elements.
 
             for element in soup(
                 [
@@ -611,24 +593,18 @@ Decision:
 
             return []
 
-    # 
+    # ========================================================
     # PERSONAL QUERY ANSWER
-    # 
+    # ========================================================
 
     def answer_personal_query(
         self,
         query: str,
     ) -> Dict[str, Any]:
-        """
-        Answer questions about Arjun Bhattarai using
-        information from his personal website.
-        """
 
         documents = (
             self.retrieve_personal_website()
         )
-
-        # WEBSITE FAILED
 
         if not documents:
 
@@ -645,39 +621,24 @@ Decision:
             return {
 
                 "query": query,
-
                 "route": "PERSONAL_WEBSITE",
-
                 "decision": "PERSONAL",
-
                 "mode": "personal_website",
-
                 "queries": [query],
-
                 "answer": answer,
-
                 "website": self.personal_website_url,
-
                 "website_url": self.personal_website_url,
-
                 "context": "",
-
                 "retrieved_documents": [],
-
                 "reranked_documents": [],
-
                 "evidence": [],
-
                 "evidence_evaluation": {},
-
                 "long_context_used": False,
-
                 "raptor_used": False,
-
                 "evaluation": {},
             }
 
-        # RERANK WEBSITE CONTENT
+        # RERANK
 
         try:
 
@@ -718,8 +679,6 @@ Decision:
             | StrOutputParser()
         )
 
-        # GENERATE
-
         try:
 
             answer = personal_chain.invoke(
@@ -740,7 +699,7 @@ Decision:
                 "Arjun's personal website."
             )
 
-        # ADD WEBSITE LINK TO ANSWER
+        # WEBSITE LINK
 
         answer = (
             f"{answer}\n\n"
@@ -754,8 +713,6 @@ Decision:
             query,
             answer,
         )
-
-        # RETURN
 
         return {
 
@@ -771,7 +728,6 @@ Decision:
 
             "answer": answer,
 
-            # Explicit website fields
             "website": self.personal_website_url,
 
             "website_url": self.personal_website_url,
@@ -807,9 +763,9 @@ Decision:
             "evaluation": {},
         }
 
-    # 
+    # ========================================================
     # ANSWERABILITY
-    # 
+    # ========================================================
 
     def check_answerability(
         self,
@@ -847,9 +803,9 @@ Decision:
 
         return "NOT_ANSWERABLE"
 
-    # 
+    # ========================================================
     # CURRENT QUERY DETECTION
-    # 
+    # ========================================================
 
     def is_current_query(
         self,
@@ -874,9 +830,9 @@ Decision:
             for keyword in keywords
         )
 
-    # 
+    # ========================================================
     # RETRIEVAL
-    # 
+    # ========================================================
 
     def retrieve(
         self,
@@ -922,9 +878,9 @@ Decision:
 
         return documents
 
-    # 
+    # ========================================================
     # WEB FALLBACK
-    # 
+    # ========================================================
 
     def retrieve_web_fallback(
         self,
@@ -957,9 +913,9 @@ Decision:
 
         return documents
 
-    # 
+    # ========================================================
     # RETRY RETRIEVAL
-    # 
+    # ========================================================
 
     def _retry_retrieval(
         self,
@@ -992,9 +948,9 @@ Decision:
             HYBRID,
         )
 
-    # 
+    # ========================================================
     # EVIDENCE EVALUATION
-    # 
+    # ========================================================
 
     def evaluate_evidence(
         self,
@@ -1051,6 +1007,7 @@ Decision:
                             self,
                             _query,
                         ):
+
                             return documents
 
                     retriever = _StaticRetriever()
@@ -1098,9 +1055,9 @@ Decision:
 
         return evaluation
 
-    # 
+    # ========================================================
     # CONTEXT
-    # 
+    # ========================================================
 
     def build_context(
         self,
@@ -1144,9 +1101,9 @@ Decision:
             used_long_context,
         )
 
-    # 
+    # ========================================================
     # GENERATION
-    # 
+    # ========================================================
 
     def generate(
         self,
@@ -1181,9 +1138,9 @@ Decision:
                 "because the language model failed."
             )
 
-    # 
+    # ========================================================
     # MEMORY
-    # 
+    # ========================================================
 
     def store_memory(
         self,
@@ -1203,9 +1160,9 @@ Decision:
             )
         )
 
-    # 
+    # ========================================================
     # RESPONSE EVALUATION
-    # 
+    # ========================================================
 
     def evaluate_response(
         self,
@@ -1249,9 +1206,9 @@ Decision:
 
             return {}
 
-    # 
+    # ========================================================
     # MAIN PIPELINE
-    # 
+    # ========================================================
 
     def run(
         self,
@@ -1292,37 +1249,73 @@ Decision:
             "Not a personal query."
         )
 
-        # STEP 1 — OLLAMA ANSWERABILITY
+        # STEP 1 — CURRENT QUERY CHECK
+
+        current_query = self.is_current_query(
+            query
+        )
+
+        print(
+            f"\nCurrent query: {current_query}"
+        )
+
+        # STEP 2 — ANSWERABILITY
 
         print(
             "\nChecking Ollama answerability..."
         )
 
-        answerability = (
-            self.check_answerability(
-                query
+        # Current/time-sensitive queries should ALWAYS
+        # require external retrieval.
+
+        if current_query:
+
+            answerability = "NOT_ANSWERABLE"
+
+            print(
+                "Current/time-sensitive query detected."
             )
-        )
 
-        print(
-            f"Ollama decision: {answerability}"
-        )
+            print(
+                "Skipping Ollama answerability check."
+            )
 
-        # STEP 2 — DIRECT OLLAMA
+            print(
+                "External retrieval required."
+            )
+
+        else:
+
+            answerability = (
+                self.check_answerability(
+                    query
+                )
+            )
+
+            print(
+                f"Ollama decision: {answerability}"
+            )
+
+        # STEP 3 — DIRECT OLLAMA + MEMORY
 
         if answerability == "ANSWERABLE":
 
             print(
-                "Answered directly by Ollama."
+                "\nAnswered directly by Ollama."
+            )
+
+            print(
+                "Conversation memory enabled."
             )
 
             try:
 
-                response = self.llm.invoke(
-                    query
+                answer = (
+                    self.conversation_memory.chat(
+                        user_message=query,
+                        llm=self.llm,
+                    )
                 )
-
-                answer = response.content
 
             except Exception as exc:
 
@@ -1333,11 +1326,6 @@ Decision:
                 answer = (
                     "The answer could not be generated."
                 )
-
-            self.store_memory(
-                query,
-                answer,
-            )
 
             return {
 
@@ -1374,17 +1362,17 @@ Decision:
                 "evaluation": {},
             }
 
-        # STEP 3 — OLLAMA FAILED
+        # STEP 4 — RAG
 
         print(
-            "Ollama cannot answer reliably."
+            "\nOllama cannot answer reliably."
         )
 
         print(
-            "Starting local RAG..."
+            "Starting RAG pipeline..."
         )
 
-        # STEP 4 — QUERY PROCESSING
+        # STEP 5 — QUERY PROCESSING
 
         queries = (
             self.query_processor.process(
@@ -1392,7 +1380,7 @@ Decision:
             )
         )
 
-        # STEP 5 — LOCAL FIRST
+        # STEP 6 — LOCAL FIRST
 
         selected_route = LOCAL
 
@@ -1403,8 +1391,6 @@ Decision:
         if selected_route not in VALID_ROUTES:
 
             selected_route = LOCAL
-
-        # Force local retrieval first.
 
         local_documents = self.retrieve(
             queries,
@@ -1420,7 +1406,7 @@ Decision:
             f"{len(local_documents)}"
         )
 
-        # STEP 6 — RERANK LOCAL DOCUMENTS
+        # STEP 7 — RERANK LOCAL
 
         documents = local_documents
 
@@ -1456,7 +1442,7 @@ Decision:
             top_k=self.config.final_top_k,
         )
 
-        # STEP 7 — CHECK LOCAL EVIDENCE
+        # STEP 8 — EVIDENCE CHECK
 
         evaluation = self.evaluate_evidence(
             query,
@@ -1473,18 +1459,18 @@ Decision:
             evaluation.requires_more_retrieval,
         )
 
-        # STEP 8 — WEB FALLBACK
+        # STEP 9 — WEB FALLBACK
 
         used_web = False
 
-        if evaluation.requires_more_retrieval:
+        # Current queries ALWAYS use web retrieval.
+        # Stable queries only use web when local evidence
+        # is insufficient.
+
+        if current_query:
 
             print(
-                "\nLocal RAG was insufficient."
-            )
-
-            print(
-                "Falling back to external retrieval..."
+                "\nCurrent query → external web retrieval."
             )
 
             web_documents = (
@@ -1498,23 +1484,14 @@ Decision:
                 web_documents
             )
 
-            print(
-                f"Web documents retrieved: "
-                f"{len(web_documents)}"
-            )
-
             if web_documents:
 
                 used_web = True
-
-            # COMBINE LOCAL + WEB
 
             documents = remove_duplicates(
                 local_documents
                 + web_documents
             )
-
-            # RERANK COMBINED RESULTS
 
             try:
 
@@ -1547,7 +1524,73 @@ Decision:
                 evidence,
             )
 
-        # STEP 9 — FINAL EVIDENCE
+        elif evaluation.requires_more_retrieval:
+
+            print(
+                "\nLocal RAG was insufficient."
+            )
+
+            print(
+                "Falling back to external retrieval..."
+            )
+
+            web_documents = (
+                self.retrieve_web_fallback(
+                    query,
+                    queries,
+                )
+            )
+
+            web_documents = remove_duplicates(
+                web_documents
+            )
+
+            print(
+                f"Web documents retrieved: "
+                f"{len(web_documents)}"
+            )
+
+            if web_documents:
+
+                used_web = True
+
+            documents = remove_duplicates(
+                local_documents
+                + web_documents
+            )
+
+            try:
+
+                ranked = rerank_with_freshness(
+                    query=query,
+                    documents=documents,
+                    reranker=self.reranker,
+                    relevance_weight=self.config.relevance_weight,
+                    freshness_weight=self.config.freshness_weight,
+                    top_k=self.config.rerank_top_k,
+                )
+
+            except Exception as exc:
+
+                print(
+                    f"Combined reranker failed: {exc}"
+                )
+
+                ranked = documents[
+                    :self.config.rerank_top_k
+                ]
+
+            evidence = select_evidence(
+                ranked,
+                top_k=self.config.final_top_k,
+            )
+
+            evaluation = self.evaluate_evidence(
+                query,
+                evidence,
+            )
+
+        # STEP 10 — FINAL EVIDENCE
 
         if evaluation.relevant_documents:
 
@@ -1556,7 +1599,7 @@ Decision:
                 top_k=self.config.final_top_k,
             )
 
-        # STEP 10 — BUILD CONTEXT
+        # STEP 11 — BUILD CONTEXT
 
         context, long_context_used = (
             self.build_context(
@@ -1565,21 +1608,21 @@ Decision:
             )
         )
 
-        # STEP 11 — GENERATE
+        # STEP 12 — GENERATE FINAL ANSWER
 
         answer = self.generate(
             query,
             context,
         )
 
-        # STEP 12 — MEMORY
+        # STEP 13 — MEMORY
 
         self.store_memory(
             query,
             answer,
         )
 
-        # STEP 13 — EVALUATION
+        # STEP 14 — EVALUATION
 
         should_evaluate = (
             self.config.enable_evaluation
@@ -1597,7 +1640,7 @@ Decision:
                 context,
             )
 
-        # STEP 14 — RETURN RESULT
+        # STEP 15 — FINAL RESULT
 
         return {
 
@@ -1612,7 +1655,7 @@ Decision:
             "decision": answerability,
 
             "mode": (
-                "web_fallback_rag"
+                "web_rag"
                 if used_web
                 else "local_rag"
             ),
@@ -1621,7 +1664,6 @@ Decision:
 
             "answer": answer,
 
-            # Always expose your website to the API/frontend.
             "website": self.personal_website_url,
 
             "website_url": self.personal_website_url,
@@ -1650,8 +1692,6 @@ Decision:
         }
 
 
-# 
 # COMPATIBILITY ALIAS
-# 
 
 RAGIntegration = RAGPipeline
